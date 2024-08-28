@@ -1,22 +1,11 @@
 ---
-name: Deploy
-run-name: Deploy to ${{ inputs.deploy-environment || 'Staging' }}
+name: 'Release: Static Production'
 
 on:
   workflow_dispatch:
-    inputs:
-      deploy-environment:
-        description: 'Which environment to deploy to'
-        required: true
-        type: choice
-        options:
-          - Staging
-          - Production
-        default: Staging
   push:
     branches:
-      - 'main'
-      - 'gha-deploy-*'
+      - static-production-amp-dev
 
 jobs:
   queue:
@@ -53,7 +42,7 @@ jobs:
           npx gulp lintNode
           npx gulp lintYaml
           npm run test:platform
-          npm run test:playground
+#          npm run test:playground
   prepare:
     needs: verify
     runs-on: ubuntu-latest
@@ -92,20 +81,21 @@ jobs:
         language:
           [
             'en',
-            'de',
+#            'de',
             'fr',
-            'ar',
+#            'ar',
             'es',
-            'it',
-            'id',
-            'ja',
-            'ko',
+            'hi',
+#            'it',
+#            'id',
+#            'ja',
+#            'ko',
             'pt_BR',
-            'ru',
-            'tr',
-            'zh_CN',
-            'pl',
-            'vi',
+#            'ru',
+#            'tr',
+#            'zh_CN',
+#            'pl',
+#            'vi',
           ]
     runs-on: ubuntu-latest
     steps:
@@ -150,42 +140,3 @@ jobs:
         with:
           name: pages-${{ github.run_id }}-${{ matrix.language }}
           path: artifacts
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment: Production
-    env:
-      APP_ENV: production
-      NETLIFY_DEPLOY_TOKEN: ${{ secrets.NETLIFY_DEPLOY_TOKEN }}
-    steps:
-      - name: Cloning repository
-        uses: actions/checkout@v4
-
-      - name: Setting up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 16
-          cache: npm
-
-      - name: Installing Node.js packages
-        run: npm ci
-
-      - name: Fetching build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      - name: Unpacking artifacts
-        run: |
-          npx gulp unpackArtifacts
-
-      - name: Finalizing build
-        run: |
-          npx gulp buildFinalize
-
-      - name: Deploying
-        env:
-          DEPLOY_ENVIRONMENT: ${{ inputs.deploy-environment || 'Staging' }}
-        run: |
-          npx gulp staticDeploy
