@@ -101,7 +101,7 @@ jobs:
 
       - name: Building pages
         run: |
-          for lang in en fr es hi pt_BR; do
+          for lang in en fr es pt_BR; do
             npx gulp buildPages --locales $lang
           done
 #          for lang in de ar it id ja ko ru tr zh_CN pl vi; do
